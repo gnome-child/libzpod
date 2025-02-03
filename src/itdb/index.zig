@@ -50,7 +50,7 @@ pub const _Prefix = packed struct {
 
 pub fn load_test_file() ![]u8 {
     const allocator = std.testing.allocator;
-    const path = "C:\\Users\\Shea\\Projects\\zig\\libzpod\\test_data\\itunesdb";
+    const path = "test_data/itunesdb";
 
     const file = try std.fs.cwd().openFile(path, .{});
     defer file.close();

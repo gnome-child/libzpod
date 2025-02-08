@@ -1,5 +1,7 @@
 const itdb = @import("index.zig");
 
+pub const DataObject = struct {};
+
 pub const MHOD = struct {
     prefix: itdb.Prefix,
     body: MhodBody,

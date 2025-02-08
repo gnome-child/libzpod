@@ -92,9 +92,8 @@ test "parse itdb header" {
     const bytes = try load_test_file();
     defer allocator.free(bytes);
 
-    var reader = serial.itdb_reader.init(bytes);
-    const prefix = try reader.read_prefix();
-    const header = try reader.read_header(prefix);
+    var reader = serial.itdb_reader.init(allocator, bytes);
+    const root = try reader.read_root();
 
-    std.debug.print("parsed {}\n", .{header});
+    std.debug.print("parsed {}\n", .{root.header.database});
 }

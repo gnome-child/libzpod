@@ -1,4 +1,13 @@
+const std = @import("std");
+
 const itdb = @import("index.zig");
+
+const DataObject = @import("data-object.zig").DataObject;
+
+pub const AlbumItem = struct {
+    header: itdb.Header,
+    data_objects: std.ArrayList(DataObject),
+};
 
 pub const MHIA = struct {
     prefix: itdb.Prefix,

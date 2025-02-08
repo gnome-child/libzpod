@@ -2,6 +2,13 @@ const std = @import("std");
 
 const itdb = @import("index.zig");
 
+const DataSet = @import("data-set.zig").DataSet;
+
+pub const Root = struct {
+    header: itdb.Header,
+    data_sets: std.ArrayList(DataSet),
+};
+
 pub const MHBD = struct {
     prefix: itdb.Prefix,
     body: MhbdBody,

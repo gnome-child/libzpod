@@ -10,13 +10,29 @@ const MhipBody = @import("playlist-item.zig").MhipBody;
 const MhiaBody = @import("album-item.zig").MhiaBody;
 const MhodBody = @import("data-object.zig").MhodBody;
 
+const Root = @import("database.zig").Root;
+const DataSet = @import("data-set.zig").DataSet;
+
 /// TODO: Docs
 pub const itdb_reader = struct {
+    allocator: std.mem.Allocator,
     bytes: []const u8,
     index: usize = 0,
 
-    pub fn init(bytes: []const u8) itdb_reader {
-        return .{ .bytes = bytes };
+    pub fn init(allocator: std.mem.Allocator, bytes: []const u8) itdb_reader {
+        return .{ .allocator = allocator, .bytes = bytes };
+    }
+
+    pub fn read_root(self: *itdb_reader) !Root {
+        const prefix = try self.read_prefix();
+        const header = try self.read_header(prefix);
+        const data_sets = std.ArrayList(DataSet).init(self.allocator);
+        defer data_sets.deinit();
+
+        return Root{
+            .header = header,
+            .data_sets = data_sets,
+        };
     }
 
     pub fn read_prefix(self: *itdb_reader) !itdb.Prefix {
@@ -248,3 +264,5 @@ pub const itdb_reader = struct {
         }
     }
 };
+
+pub const itdb_writer = struct {};

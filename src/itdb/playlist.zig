@@ -1,4 +1,13 @@
+const std = @import("std");
+
 const itdb = @import("index.zig");
+
+const PlaylistItem = @import("playlist-item.zig");
+
+pub const Playlist = struct {
+    header: itdb.Header,
+    playlist_items: std.ArrayList(PlaylistItem),
+};
 
 pub const MHYP = struct {
     prefix: itdb.Prefix,

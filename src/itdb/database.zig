@@ -1,17 +1,16 @@
 const std = @import("std");
 
-const prefix = @import("index.zig")._Prefix;
-const data_set = @import("data-set.zig").DataSet;
+const itdb = @import("index.zig");
 
-pub const Root = struct {
-    header: MHBD,
-    data_sets: []*data_set,
+pub const MHBD = struct {
+    prefix: itdb.Prefix,
+    body: MhbdBody,
+    padding: []const u8,
 };
 
 /// The entry point of an iTunesDB.
-pub const MHBD = packed struct {
-    prefix: prefix,
-    blob_0: u32,
+pub const MhbdBody = packed struct {
+    unk0: u32,
 
     /// The version of the iTunesDB. Determines which fields/features are available.
     db_version: u32,
@@ -25,12 +24,17 @@ pub const MHBD = packed struct {
     /// Windows or Unix?
     platform: u16,
 
-    blob_1: u112,
+    unk1: u16,
+
+    /// Some kind of id
+    id_0x24: u64,
+
+    unk2: u32,
 
     /// Some kind of hashing scheme?
     hash_scheme: u16,
 
-    blob_2: u160,
+    unk3: u160,
 
     /// Language id
     language_id: u16,
@@ -38,13 +42,14 @@ pub const MHBD = packed struct {
     /// Some kind of persistent id
     db_persistent_id: u64,
 
-    blob_3: u64,
+    unk4: u32,
+    unk5: u32,
     hash58: u160,
 
     /// Offset for accurately reflecting timezone
     timezone_offset: u32,
 
-    blob_4: u16,
+    unk6: u16,
     hash72: u368,
 
     /// Language of audio
@@ -53,7 +58,9 @@ pub const MHBD = packed struct {
     /// Language of subtitles
     subtitle_language: u16,
 
-    blob_5: u48,
+    unk7: u16,
+    unk8: u16,
+    unk9: u16,
     alignment_byte: u8,
     hashAB: u456,
 };

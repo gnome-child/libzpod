@@ -87,7 +87,8 @@ pub fn load_test_file() ![]u8 {
     return buffer;
 }
 
-test "parse itdb header" {
+// This test floods the output, warning!
+test "parse itdb" {
     const allocator = std.testing.allocator;
     const bytes = try load_test_file();
     defer allocator.free(bytes);

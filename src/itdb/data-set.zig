@@ -31,6 +31,8 @@ pub const DataSet = struct {
         const header = try reader.read_header(prefix);
         const data_set_type = @as(DataSetType, @enumFromInt(header.data_set.body.type));
 
+        std.debug.print("  data set ({})\n", .{data_set_type});
+
         const list = switch (data_set_type) {
             .tracks => ListType{ .tracks = try TrackList.read(reader) },
             .playlists => ListType{ .playlists = try PlaylistList.read(reader) },

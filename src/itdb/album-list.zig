@@ -16,6 +16,8 @@ pub const AlbumList = struct {
         var album_items = std.ArrayList(AlbumItem).init(reader.allocator);
         defer album_items.deinit();
 
+        std.debug.print("    albums: {}\n", .{album_count});
+
         for (album_count) |_| {
             try album_items.append(try AlbumItem.read(reader));
         }

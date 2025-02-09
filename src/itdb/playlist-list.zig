@@ -16,6 +16,8 @@ pub const PlaylistList = struct {
         var playlists = std.ArrayList(Playlist).init(reader.allocator);
         defer playlists.deinit();
 
+        std.debug.print("    playlists: {}\n", .{playlist_count});
+
         for (playlist_count) |_| {
             try playlists.append(try Playlist.read(reader));
         }

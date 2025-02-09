@@ -96,5 +96,5 @@ test "parse itdb" {
     var reader = serialization.itdb_reader.init(allocator, bytes);
     const root = try reader.read_root();
 
-    std.debug.print("parsed {}\n", .{root.header.database});
+    std.debug.print("root: {}\n", .{root.header.database});
 }

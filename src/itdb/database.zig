@@ -16,6 +16,8 @@ pub const Root = struct {
         var data_sets = std.ArrayList(DataSet).init(reader.allocator);
         defer data_sets.deinit();
 
+        std.debug.print("data sets: {}\n", .{data_set_count});
+
         for (data_set_count) |_| {
             try data_sets.append(try DataSet.read(reader));
         }

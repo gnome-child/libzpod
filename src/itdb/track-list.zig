@@ -16,6 +16,8 @@ pub const TrackList = struct {
         var track_items = std.ArrayList(TrackItem).init(reader.allocator);
         defer track_items.deinit();
 
+        std.debug.print("    tracks: {}\n", .{track_count});
+
         for (track_count) |_| {
             try track_items.append(try TrackItem.read(reader));
         }

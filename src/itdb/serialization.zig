@@ -32,16 +32,14 @@ pub const itdb_reader = struct {
         const prefix_size: usize = @bitSizeOf(itdb.Prefix) / 8;
         const next_index: usize = self.index + prefix_size;
         const prefix = std.mem.bytesToValue(itdb.Prefix, self.bytes[self.index..next_index][0..prefix_size]);
-        std.debug.print("in prefix next o/s: {}\n", .{next_index});
 
         self.index = next_index;
+
         return prefix;
     }
 
     pub fn read_header(self: *itdb_reader, prefix: itdb.Prefix) !itdb.Header {
         const header_type = @as(itdb.TypeId, @enumFromInt(@byteSwap(prefix.element_type)));
-
-        std.debug.print("entered read header: {}\n", .{header_type});
 
         return switch (header_type) {
             .database => self.read_mhbd(prefix),
@@ -67,8 +65,6 @@ pub const itdb_reader = struct {
 
         self.index = next_index;
 
-        std.debug.print("in mhbd next o/s: {}\n", .{self.index});
-
         const padding = try self.read_padding(padding_size);
 
         return itdb.Header{ .database = .{
@@ -88,8 +84,6 @@ pub const itdb_reader = struct {
 
         self.index = next_index;
 
-        std.debug.print("in mhsd next o/s: {}\n", .{self.index});
-
         const padding = try self.read_padding(padding_size);
 
         return itdb.Header{ .data_set = .{
@@ -104,8 +98,6 @@ pub const itdb_reader = struct {
         try self.ensure_bytes_available(expected_size);
 
         const padding_size: usize = prefix.header_len - expected_size;
-
-        std.debug.print("in mhlt next o/s: {}\n", .{self.index});
 
         const padding = try self.read_padding(padding_size);
 
@@ -125,8 +117,6 @@ pub const itdb_reader = struct {
 
         self.index = next_index;
 
-        std.debug.print("in mhit next o/s: {}\n", .{self.index});
-
         const padding = try self.read_padding(padding_size);
 
         return itdb.Header{ .track_item = .{
@@ -141,8 +131,6 @@ pub const itdb_reader = struct {
         try self.ensure_bytes_available(expected_size);
 
         const padding_size: usize = prefix.header_len - expected_size;
-
-        std.debug.print("in mhlp next o/s: {}\n", .{self.index});
 
         const padding = try self.read_padding(padding_size);
 
@@ -161,8 +149,6 @@ pub const itdb_reader = struct {
         const body = std.mem.bytesToValue(MhypBody, self.bytes[self.index..next_index][0..expected_size]);
 
         self.index = next_index;
-
-        std.debug.print("in mhyp next o/s: {}\n", .{self.index});
 
         const padding = try self.read_padding(padding_size);
 
@@ -183,8 +169,6 @@ pub const itdb_reader = struct {
 
         self.index = next_index;
 
-        std.debug.print("in mhip next o/s: {}\n", .{self.index});
-
         const padding = try self.read_padding(padding_size);
 
         return itdb.Header{ .playlist_item = .{
@@ -199,9 +183,6 @@ pub const itdb_reader = struct {
         try self.ensure_bytes_available(expected_size);
 
         const padding_size: usize = prefix.header_len - expected_size;
-        std.debug.print("in mhla next o/s: {}\n", .{self.index});
-        std.debug.print("   expected data size: {}\n", .{expected_size});
-
         const padding = try self.read_padding(padding_size);
 
         return itdb.Header{ .album_list = .{
@@ -220,9 +201,6 @@ pub const itdb_reader = struct {
 
         self.index = next_index;
 
-        std.debug.print("in mhia next o/s: {}\n", .{self.index});
-        std.debug.print("   expected data size: {}\n", .{expected_size});
-
         const padding = try self.read_padding(padding_size);
 
         return itdb.Header{ .album_item = .{
@@ -233,16 +211,12 @@ pub const itdb_reader = struct {
     }
 
     fn read_mhod(self: *itdb_reader, prefix: itdb.Prefix) !itdb.Header {
-        std.debug.print("entered mhod: {}\n", .{self.index});
-
         const expected_size: usize = prefix.element_size - 12;
         try self.ensure_bytes_available(expected_size);
 
         const next_index: usize = self.index + expected_size;
 
         self.index = next_index;
-
-        std.debug.print("leaving mhod: {}\n", .{self.index});
 
         return itdb.Header{
             .data_object = .{
@@ -258,9 +232,6 @@ pub const itdb_reader = struct {
         const padding = self.bytes[self.index..next_index][0..size];
 
         self.index = next_index;
-
-        std.debug.print("in padding next o/s: {}\n", .{self.index});
-        std.debug.print("   padding: {}\n", .{padding.len});
 
         return padding;
     }

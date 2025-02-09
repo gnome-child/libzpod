@@ -13,7 +13,7 @@ pub const Playlist = struct {
     pub fn read(reader: *itdb.serialization.itdb_reader) !Playlist {
         const prefix = try reader.read_prefix();
         const header = try reader.read_header(prefix);
-        const playlist_count = header.playlist.body.number_of_playlists;
+        const playlist_item_count = header.playlist.body.number_of_playlists;
         const data_object_count = header.playlist.body.number_of_data_objects;
 
         var data_objects = std.ArrayList(DataObject).init(reader.allocator);
@@ -21,11 +21,13 @@ pub const Playlist = struct {
         defer data_objects.deinit();
         defer playlist_items.deinit();
 
+        std.debug.print("      entries: {}\n", .{playlist_item_count});
+
         for (data_object_count) |_| {
             try data_objects.append(try DataObject.read(reader));
         }
 
-        for (playlist_count) |_| {
+        for (playlist_item_count) |_| {
             try playlist_items.append(try PlaylistItem.read(reader));
         }
 

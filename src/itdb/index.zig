@@ -11,7 +11,7 @@ pub const MHLA = @import("album-list.zig").MHLA;
 pub const MHIA = @import("album-item.zig").MHIA;
 pub const MHOD = @import("data-object.zig").MHOD;
 
-const serial = @import("serialization.zig");
+pub const serialization = @import("serialization.zig");
 
 /// The type identifier for the database element expressed as u32.
 ///
@@ -92,7 +92,7 @@ test "parse itdb header" {
     const bytes = try load_test_file();
     defer allocator.free(bytes);
 
-    var reader = serial.itdb_reader.init(allocator, bytes);
+    var reader = serialization.itdb_reader.init(allocator, bytes);
     const root = try reader.read_root();
 
     std.debug.print("parsed {}\n", .{root.header.database});

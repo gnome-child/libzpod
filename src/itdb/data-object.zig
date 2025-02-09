@@ -1,12 +1,20 @@
 const itdb = @import("index.zig");
 
-pub const DataObject = struct {};
+pub const DataObject = struct {
+    header: itdb.Header,
+
+    pub fn read(reader: *itdb.serialization.itdb_reader) !DataObject {
+        const prefix = try reader.read_prefix();
+        const header = try reader.read_header(prefix);
+
+        return DataObject{
+            .header = header,
+        };
+    }
+};
 
 pub const MHOD = struct {
     prefix: itdb.Prefix,
-    body: MhodBody,
-    string: []const u8,
-    padding: []const u8,
 };
 
 pub const MhodBody = packed struct {

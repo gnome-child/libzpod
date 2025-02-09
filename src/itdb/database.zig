@@ -7,6 +7,24 @@ const DataSet = @import("data-set.zig").DataSet;
 pub const Root = struct {
     header: itdb.Header,
     data_sets: std.ArrayList(DataSet),
+
+    pub fn read(reader: *itdb.serialization.itdb_reader) !Root {
+        const prefix = try reader.read_prefix();
+        const header = try reader.read_header(prefix);
+        const data_set_count = header.database.body.data_set_count;
+
+        var data_sets = std.ArrayList(DataSet).init(reader.allocator);
+        defer data_sets.deinit();
+
+        for (data_set_count) |_| {
+            try data_sets.append(try DataSet.read(reader));
+        }
+
+        return Root{
+            .header = header,
+            .data_sets = data_sets,
+        };
+    }
 };
 
 pub const MHBD = struct {

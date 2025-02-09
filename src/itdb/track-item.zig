@@ -7,6 +7,24 @@ const DataObject = @import("data-object.zig").DataObject;
 pub const TrackItem = struct {
     header: itdb.Header,
     data_objects: std.ArrayList(DataObject),
+
+    pub fn read(reader: *itdb.serialization.itdb_reader) !TrackItem {
+        const prefix = try reader.read_prefix();
+        const header = try reader.read_header(prefix);
+        const data_object_count = header.track_item.body.number_of_data_objects;
+
+        var data_objects = std.ArrayList(DataObject).init(reader.allocator);
+        defer data_objects.deinit();
+
+        for (data_object_count) |_| {
+            try data_objects.append(try DataObject.read(reader));
+        }
+
+        return TrackItem{
+            .header = header,
+            .data_objects = data_objects,
+        };
+    }
 };
 
 pub const MHIT = struct {

@@ -2,11 +2,39 @@ const std = @import("std");
 
 const itdb = @import("index.zig");
 
-const PlaylistItem = @import("playlist-item.zig");
+const PlaylistItem = @import("playlist-item.zig").PlaylistItem;
+const DataObject = @import("data-object.zig").DataObject;
 
 pub const Playlist = struct {
     header: itdb.Header,
+    data_objects: std.ArrayList(DataObject),
     playlist_items: std.ArrayList(PlaylistItem),
+
+    pub fn read(reader: *itdb.serialization.itdb_reader) !Playlist {
+        const prefix = try reader.read_prefix();
+        const header = try reader.read_header(prefix);
+        const playlist_count = header.playlist.body.number_of_playlists;
+        const data_object_count = header.playlist.body.number_of_data_objects;
+
+        var data_objects = std.ArrayList(DataObject).init(reader.allocator);
+        var playlist_items = std.ArrayList(PlaylistItem).init(reader.allocator);
+        defer data_objects.deinit();
+        defer playlist_items.deinit();
+
+        for (data_object_count) |_| {
+            try data_objects.append(try DataObject.read(reader));
+        }
+
+        for (playlist_count) |_| {
+            try playlist_items.append(try PlaylistItem.read(reader));
+        }
+
+        return Playlist{
+            .header = header,
+            .data_objects = data_objects,
+            .playlist_items = playlist_items,
+        };
+    }
 };
 
 pub const MHYP = struct {

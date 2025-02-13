@@ -50,6 +50,19 @@ pub const Header = union(HeaderId) {
     mhod: mhod.DataObject,
 };
 
+pub const Element = union(HeaderId) {
+    mhbd: mhbd.Root,
+    mhsd: mhsd.DataSet,
+    mhlt: mhlt.TrackList,
+    mhlp: mhlp.PlaylistList,
+    mhla: mhla.AlbumList,
+    mhit: mhit.TrackItem,
+    mhyp: mhyp.Playlist,
+    mhip: mhip.PlaylistItem,
+    mhia: mhia.AlbumItem,
+    mhod: mhod.DataObject,
+};
+
 pub fn load_test_file(index: u32) ![]u8 {
     const allocator = std.testing.allocator;
     const path = switch (index) {
@@ -93,10 +106,18 @@ test "read data set at 244" {
     const mhsd_struct = try reader.read_header_as(mhsd.MHSD);
 
     std.debug.print("mhsd data:\n{}\n", .{mhsd_struct});
+}
 
-    reader.index = 520;
+test "parse itdb" {
+    const test_alloc = std.testing.allocator;
+    const bytes = try load_test_file(2);
+    defer test_alloc.free(bytes);
 
-    const data_obj = try reader.read_data_object();
+    var arena = std.heap.ArenaAllocator.init(test_alloc);
+    const allocator = arena.allocator();
+    var reader = serializer.ItdbReader.init(allocator, bytes);
+    const root = try reader.parse(mhbd.Root);
 
-    std.debug.print("string: {s}\n", .{data_obj.string.string_data});
+    std.debug.print("root: {}", .{root.header});
+    arena.deinit();
 }

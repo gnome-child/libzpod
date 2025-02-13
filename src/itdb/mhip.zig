@@ -14,7 +14,7 @@ pub const MHIP = packed struct {
     id: u32 = id,
     header_len: u32,
     len: u32,
-    number_of_data_objects: u32,
+    data_object_count: u32,
     podcast_grouping: u16,
     unk0: u8,
     unk1: u8,

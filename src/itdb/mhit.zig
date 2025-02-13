@@ -14,7 +14,7 @@ pub const MHIT = packed struct {
     id: u32 = id,
     header_len: u32,
     len: u32,
-    number_of_data_objects: u32,
+    data_object_count: u32,
     track_id: u32,
     visible: u32,
     filetype: u32,

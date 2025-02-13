@@ -123,6 +123,7 @@ pub const ItdbReader = struct {
             .podcast_enclosure_url, .podcast_rss_url => mhod.DataObject{
                 .podcast_url = .{
                     .id = header_id,
+                    .len = len,
                     .header_len = header_len,
                     .type = type_id,
                     .unk0 = try self.read_field_le(u32),

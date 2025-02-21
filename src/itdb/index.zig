@@ -38,29 +38,55 @@ pub const HeaderId = enum(u32) {
 };
 
 pub const Header = union(HeaderId) {
-    mhbd: mhbd.MHBD,
-    mhsd: mhsd.MHSD,
-    mhlt: mhlt.MHLT,
-    mhlp: mhlp.MHLP,
-    mhla: mhla.MHLA,
-    mhit: mhit.MHIT,
-    mhyp: mhyp.MHYP,
-    mhip: mhip.MHIP,
-    mhia: mhia.MHIA,
+    mhbd: mhbd.Fields,
+    mhsd: mhsd.Fields,
+    mhlt: mhlt.Fields,
+    mhlp: mhlp.Fields,
+    mhla: mhla.Fields,
+    mhit: mhit.Fields,
+    mhyp: mhyp.Fields,
+    mhip: mhip.Fields,
+    mhia: mhia.Fields,
     mhod: mhod.DataObject,
 };
 
-pub const Element = union(HeaderId) {
-    mhbd: mhbd.Root,
-    mhsd: mhsd.DataSet,
-    mhlt: mhlt.TrackList,
-    mhlp: mhlp.PlaylistList,
-    mhla: mhla.AlbumList,
-    mhit: mhit.TrackItem,
-    mhyp: mhyp.Playlist,
-    mhip: mhip.PlaylistItem,
-    mhia: mhia.AlbumItem,
-    mhod: mhod.DataObject,
+pub const ItunesDB = struct {
+    arena: std.heap.ArenaAllocator,
+    root: Root,
+    track_list: TrackList,
+
+    pub fn init(bytes: []const u8) !ItunesDB {
+        var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+        var reader = serializer.ItdbReader.init(arena.allocator(), bytes);
+
+        const root = try reader.parse(Root);
+
+        var track_list: TrackList = undefined;
+
+        for (root.data_sets.items) |data_set| {
+            if (data_set.header.data_type == @intFromEnum(mhsd.DataType.track_list)) {
+                track_list = data_set.data.track_list;
+            }
+        }
+
+        return ItunesDB{
+            .arena = arena,
+            .root = root,
+            .track_list = track_list,
+        };
+    }
+
+    pub fn deinit(self: *ItunesDB) void {
+        self.arena.deinit();
+    }
+
+    pub fn add_track(self: *ItunesDB) !TrackItem {
+        const track_to_add = self.track_list.track_items.items[3];
+
+        try self.track_list.track_items.append(track_to_add);
+
+        return track_to_add;
+    }
 };
 
 pub fn load_test_file(index: u32) ![]u8 {
@@ -103,7 +129,7 @@ test "read data set at 244" {
     reader.index = 244;
     std.debug.assert(try reader.peek_field_be(u32) == mhsd.id);
 
-    const mhsd_struct = try reader.read_header_as(mhsd.MHSD);
+    const mhsd_struct = try reader.read_header_as(mhsd.Fields);
 
     std.debug.print("mhsd data:\n{}\n", .{mhsd_struct});
 }
@@ -113,11 +139,8 @@ test "parse itdb" {
     const bytes = try load_test_file(2);
     defer test_alloc.free(bytes);
 
-    var arena = std.heap.ArenaAllocator.init(test_alloc);
-    const allocator = arena.allocator();
-    var reader = serializer.ItdbReader.init(allocator, bytes);
-    const root = try reader.parse(mhbd.Root);
-
-    std.debug.print("root: {}", .{root.header});
-    arena.deinit();
+    var itdb = try ItunesDB.init(bytes);
+    const track = try itdb.add_track();
+    std.debug.print("\n{s}\n", .{track.data.items[1].string.string_data});
+    itdb.deinit();
 }

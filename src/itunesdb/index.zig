@@ -1,7 +1,6 @@
 pub const std = @import("std");
 
 pub const header = @import("header.zig");
-pub const reader = @import("reader.zig");
 pub const serializer = @import("serializer.zig");
 
 pub const DataSetType = enum(u32) {
@@ -70,11 +69,7 @@ pub const Element = union(enum) {
 
 pub const Root = struct {
     header: *align(1) const header.mhbd.Fields,
-    track_list: ?DataSet,
-    playlist_list: ?DataSet,
-    podcast_list: ?DataSet,
-    album_list: ?DataSet,
-    smart_playlist_list: ?DataSet,
+    data_sets: std.ArrayList(DataSet),
 };
 
 pub const DataSet = struct {
@@ -129,6 +124,42 @@ pub const DataObject = struct {
     data: []const u8,
 };
 
+allocator: std.mem.Allocator,
+arena: std.heap.ArenaAllocator,
+reader: serializer.Reader,
+root: Root,
+
+pub fn load(allocator: std.mem.Allocator, file_path: []const u8) !@This() {
+    var arena = std.heap.ArenaAllocator.init(allocator);
+
+    const file = try std.fs.cwd().openFile(file_path, .{});
+    defer file.close();
+
+    const file_size = try file.getEndPos();
+    const buffer = try allocator.alloc(u8, file_size);
+    const buffer_len = try file.readAll(buffer);
+
+    if (buffer_len != file_size) {
+        allocator.free(buffer);
+        return error.ShortRead;
+    }
+
+    var reader = try serializer.Reader.init(arena.allocator(), buffer);
+    const root = try reader.parse_element(Root);
+
+    return @This(){
+        .allocator = allocator,
+        .reader = reader,
+        .arena = arena,
+        .root = root,
+    };
+}
+
+pub fn unload(self: *@This()) void {
+    self.allocator.free(self.reader.buffer);
+    self.arena.deinit();
+}
+
 pub fn load_test_file(index: u32) ![]u8 {
     const allocator = std.testing.allocator;
     const path = switch (index) {
@@ -152,16 +183,15 @@ pub fn load_test_file(index: u32) ![]u8 {
     return buffer;
 }
 
-test "parse a header" {
-    const alloc = std.testing.allocator;
-    const bytes = try load_test_file(2);
-    defer alloc.free(bytes);
+test "print song and artist names" {
+    var itunesdb = try load(std.testing.allocator, "test_data/itunesdb2");
+    const test_root = itunesdb.root.data_sets.items[1].set.track_list.track_items.items;
 
-    var arena = std.heap.ArenaAllocator.init(alloc);
+    for (0..test_root.len) |in| {
+        const data = test_root[in].data_objects.items[0].data;
+        const data2 = test_root[in].data_objects.items[1].data;
+        std.debug.print("{s} - {s}\n", .{ data, data2 });
+    }
 
-    var itdb_reader = try serializer.Reader.init(arena.allocator(), bytes);
-    const rootdb = try itdb_reader.parse_element(Root);
-    std.debug.print("{}\n", .{rootdb});
-
-    arena.deinit();
+    itunesdb.unload();
 }

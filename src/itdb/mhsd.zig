@@ -21,12 +21,12 @@ pub const DataSetData = union(DataType) {
 };
 
 pub const DataSet = struct {
-    header: MHSD,
+    header: Fields,
     padding: []const u8,
     data: DataSetData,
 };
 
-pub const MHSD = packed struct {
+pub const Fields = packed struct {
     id: u32 = id,
     header_len: u32,
     len: u32,

@@ -22,10 +22,12 @@ pub const Reader = struct {
         };
     }
 
+    pub fn deinit(self: *Reader) void {
+        self.allocator.free(self.buffer);
+    }
+
     pub fn parse_element(self: *Reader, comptime T: type) ReaderError!T {
         const header_type_id = try self.peek_header_type_id();
-
-        std.debug.print("{} at {}\n", .{ header_type_id, self.index });
 
         switch (header_type_id) {
             .mhbd => {
@@ -96,8 +98,6 @@ pub const Reader = struct {
 
                 const data_obj_type = try self.peek_data_obj_type();
 
-                std.debug.print("{}\n", .{data_obj_type});
-
                 switch (data_obj_type) {
                     .title, .location, .album, .artist, .genre, .filetype, .eq_setting, .comment, .category, .composer, .grouping, .description, .album_list_album => {
                         const header = try self.read_header_as(itunesdb.header.mhod.String);
@@ -119,40 +119,19 @@ pub const Reader = struct {
     pub fn parse_root(self: *Reader, header: *align(1) const itunesdb.header.mhbd.Fields) ReaderError!itunesdb.Root {
         const data_set_count = header.data_set_count;
 
-        var database_root = itunesdb.Root{
-            .header = header,
-            .track_list = null,
-            .playlist_list = null,
-            .podcast_list = null,
-            .album_list = null,
-            .smart_playlist_list = null,
-        };
-
         //TODO: Do something smart with padding?
         try self.skip_bytes(header.header_len - @sizeOf(itunesdb.header.mhbd.Fields));
 
-        for (0..data_set_count) |_| {
-            const data_set_type = try self.peek_data_set_type();
+        var data_sets = std.ArrayList(itunesdb.DataSet).init(self.allocator);
 
-            switch (data_set_type) {
-                .track_list => {
-                    database_root.track_list = try self.parse_element(itunesdb.DataSet);
-                },
-                .playlist_list => {
-                    database_root.playlist_list = try self.parse_element(itunesdb.DataSet);
-                },
-                .podcast_list => {
-                    database_root.podcast_list = try self.parse_element(itunesdb.DataSet);
-                },
-                .album_list => {
-                    database_root.album_list = try self.parse_element(itunesdb.DataSet);
-                },
-                .smart_playlist_list => {
-                    database_root.smart_playlist_list = try self.parse_element(itunesdb.DataSet);
-                },
-            }
+        for (0..data_set_count) |_| {
+            try data_sets.append(try self.parse_element(itunesdb.DataSet));
         }
-        return database_root;
+
+        return itunesdb.Root{
+            .header = header,
+            .data_sets = data_sets,
+        };
     }
 
     pub fn parse_data_set(self: *Reader, header: *align(1) const itunesdb.header.mhsd.Fields) ReaderError!itunesdb.DataSet {
@@ -346,8 +325,6 @@ pub const Reader = struct {
         const start_of_header = self.index;
         const end_of_header = start_of_header + required_size;
 
-        std.debug.print("{}\n", .{required_size});
-
         if (self.bytes_available(required_size)) {
             const header = std.mem.bytesAsValue(T, self.buffer[start_of_header..end_of_header]);
             self.index = end_of_header;
@@ -381,7 +358,6 @@ pub const Reader = struct {
 
     pub fn peek_header_type_id(self: *Reader) ReaderError!itunesdb.header.TypeId {
         const type_id_u32 = try self.peek_field_at(0, u32, .big);
-        std.debug.print("{}\n", .{self.index});
         return @as(itunesdb.header.TypeId, @enumFromInt(type_id_u32));
     }
 

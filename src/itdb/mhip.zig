@@ -5,12 +5,12 @@ const itdb = @import("index.zig");
 pub const id: u32 = 0x6D686970;
 
 pub const PlaylistItem = struct {
-    header: MHIP,
+    header: Fields,
     padding: []const u8,
     data: std.ArrayList(itdb.DataObject),
 };
 
-pub const MHIP = packed struct {
+pub const Fields = packed struct {
     id: u32 = id,
     header_len: u32,
     len: u32,

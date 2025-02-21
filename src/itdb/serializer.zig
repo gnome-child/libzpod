@@ -168,15 +168,15 @@ pub const ItdbReader = struct {
         const header_id = @as(itdb.HeaderId, @enumFromInt(self.peek_field_be(u32)));
 
         return switch (header_id) {
-            .mhbd => itdb.Header{ .mhbd = try self.read_header_as(mhbd.MHBD) },
-            .mhsd => itdb.Header{ .mhsd = try self.read_header_as(mhsd.MHSD) },
-            .mhlt => itdb.Header{ .mhlt = try self.read_header_as(mhlt.MHLT) },
-            .mhlp => itdb.Header{ .mhlp = try self.read_header_as(mhlp.MHLP) },
-            .mhla => itdb.Header{ .mhla = try self.read_header_as(mhla.MHLA) },
-            .mhit => itdb.Header{ .mhit = try self.read_header_as(mhit.MHIT) },
-            .mhyp => itdb.Header{ .mhyp = try self.read_header_as(mhyp.MHYP) },
-            .mhip => itdb.Header{ .mhip = try self.read_header_as(mhip.MHIP) },
-            .mhia => itdb.Header{ .mhia = try self.read_header_as(mhia.MHIA) },
+            .mhbd => itdb.Header{ .mhbd = try self.read_header_as(mhbd.Fields) },
+            .mhsd => itdb.Header{ .mhsd = try self.read_header_as(mhsd.Fields) },
+            .mhlt => itdb.Header{ .mhlt = try self.read_header_as(mhlt.Fields) },
+            .mhlp => itdb.Header{ .mhlp = try self.read_header_as(mhlp.Fields) },
+            .mhla => itdb.Header{ .mhla = try self.read_header_as(mhla.Fields) },
+            .mhit => itdb.Header{ .mhit = try self.read_header_as(mhit.Fields) },
+            .mhyp => itdb.Header{ .mhyp = try self.read_header_as(mhyp.Fields) },
+            .mhip => itdb.Header{ .mhip = try self.read_header_as(mhip.Fields) },
+            .mhia => itdb.Header{ .mhia = try self.read_header_as(mhia.Fields) },
             .mhod => itdb.Header{ .mhod = try self.read_data_object() },
         };
     }
@@ -188,7 +188,7 @@ pub const ItdbReader = struct {
             .mhbd => {
                 if (T != mhbd.Root) return error.MismatchedHeader;
 
-                const header = try self.read_header_as_padded(mhbd.MHBD);
+                const header = try self.read_header_as_padded(mhbd.Fields);
                 const data_set_count = header[0].data_set_count;
 
                 var data_sets = std.ArrayList(mhsd.DataSet).init(self.allocator);
@@ -207,7 +207,7 @@ pub const ItdbReader = struct {
             .mhsd => {
                 if (T != mhsd.DataSet) return error.MismatchedHeader;
 
-                const header = try self.read_header_as_padded(mhsd.MHSD);
+                const header = try self.read_header_as_padded(mhsd.Fields);
                 const data_type = @as(mhsd.DataType, @enumFromInt(header[0].data_type));
 
                 const data = switch (data_type) {
@@ -238,7 +238,7 @@ pub const ItdbReader = struct {
             .mhlt => {
                 if (T != mhlt.TrackList) return error.MismatchedHeader;
 
-                const header = try self.read_header_as_padded(mhlt.MHLT);
+                const header = try self.read_header_as_padded(mhlt.Fields);
                 const entries = header[0].entries;
                 var track_items = std.ArrayList(mhit.TrackItem).init(self.allocator);
 
@@ -256,7 +256,7 @@ pub const ItdbReader = struct {
             .mhlp => {
                 if (T != mhlp.PlaylistList) return error.MismatchedHeader;
 
-                const header = try self.read_header_as_padded(mhlp.MHLP);
+                const header = try self.read_header_as_padded(mhlp.Fields);
                 const entries = header[0].entries;
                 var playlists = std.ArrayList(mhyp.Playlist).init(self.allocator);
 
@@ -274,7 +274,7 @@ pub const ItdbReader = struct {
             .mhla => {
                 if (T != mhla.AlbumList) return error.MismatchedHeader;
 
-                const header = try self.read_header_as_padded(mhla.MHLA);
+                const header = try self.read_header_as_padded(mhla.Fields);
                 const entries = header[0].entries;
                 var album_items = std.ArrayList(mhia.AlbumItem).init(self.allocator);
 
@@ -292,7 +292,7 @@ pub const ItdbReader = struct {
             .mhit => {
                 if (T != mhit.TrackItem) return error.MismatchedHeader;
 
-                const header = try self.read_header_as_padded(mhit.MHIT);
+                const header = try self.read_header_as_padded(mhit.Fields);
                 const data_object_count = header[0].data_object_count;
                 var data = std.ArrayList(mhod.DataObject).init(self.allocator);
 
@@ -310,7 +310,7 @@ pub const ItdbReader = struct {
             .mhyp => {
                 if (T != mhyp.Playlist) return error.MismatchedHeader;
 
-                const header = try self.read_header_as_padded(mhyp.MHYP);
+                const header = try self.read_header_as_padded(mhyp.Fields);
                 const data_object_count = header[0].data_object_count;
                 const playlist_item_count = header[0].playlist_item_count;
                 var data = std.ArrayList(mhod.DataObject).init(self.allocator);
@@ -335,7 +335,7 @@ pub const ItdbReader = struct {
             .mhip => {
                 if (T != mhip.PlaylistItem) return error.MismatchedHeader;
 
-                const header = try self.read_header_as_padded(mhip.MHIP);
+                const header = try self.read_header_as_padded(mhip.Fields);
                 const data_object_count = header[0].data_object_count;
                 var data = std.ArrayList(mhod.DataObject).init(self.allocator);
 
@@ -353,7 +353,7 @@ pub const ItdbReader = struct {
             .mhia => {
                 if (T != mhia.AlbumItem) return error.MismatchedHeader;
 
-                const header = try self.read_header_as_padded(mhia.MHIA);
+                const header = try self.read_header_as_padded(mhia.Fields);
                 const number_of_strings = header[0].number_of_strings;
                 var data = std.ArrayList(mhod.DataObject).init(self.allocator);
 
@@ -373,12 +373,106 @@ pub const ItdbReader = struct {
 
                 const data_obj = try self.read_data_object();
 
-                if (data_obj == .string) {
-                    std.debug.print("{s}\n", .{data_obj.string.string_data});
+                if (data_obj == .podcast_url) {
+                    std.debug.print("{s}\n", .{data_obj.podcast_url.url_data});
                 }
 
                 return data_obj;
             },
         }
+    }
+};
+
+pub const ItdbWriter = struct {
+    allocator: std.mem.Allocator,
+    root: itdb.Root,
+    buffer: std.ArrayList(u8),
+    index: usize = 0,
+
+    pub fn init(allocator: std.mem.Allocator, root: itdb.Root, size: ?usize) !ItdbWriter {
+        var buffer = std.ArrayList(u8).init(allocator);
+        if (size != null) try buffer.ensureTotalCapacity(size.?);
+
+        return ItdbWriter{
+            .allocator = allocator,
+            .root = root,
+            .buffer = buffer,
+        };
+    }
+
+    pub fn write_root_header(self: *ItdbWriter) !void {
+        const header = self.root.header;
+        const padding = self.root.padding;
+
+        try self.buffer.appendSlice(std.mem.asBytes(&header));
+        try self.buffer.appendSlice(padding[0..]);
+    }
+
+    pub fn write_data_set_header(self: *ItdbWriter, data_set: itdb.DataSet) !void {
+        const header = data_set.header;
+        const padding = data_set.padding;
+
+        try self.buffer.appendSlice(std.mem.asBytes(&header));
+        try self.buffer.appendSlice(padding[0..]);
+    }
+
+    pub fn write_track_list_header(self: *ItdbWriter, track_list: itdb.TrackList) !void {
+        const header = track_list.header;
+        const padding = track_list.padding;
+
+        try self.buffer.appendSlice(std.mem.asBytes(&header));
+        try self.buffer.appendSlice(padding[0..]);
+    }
+
+    pub fn write_playlist_list_header(self: *ItdbWriter, playlist_list: itdb.PlaylistList) !void {
+        const header = playlist_list.header;
+        const padding = playlist_list.padding;
+
+        try self.buffer.appendSlice(std.mem.asBytes(&header));
+        try self.buffer.appendSlice(padding[0..]);
+    }
+
+    pub fn write_album_list_header(self: *ItdbWriter, album_list: itdb.AlbumList) !void {
+        const header = album_list.header;
+        const padding = album_list.padding;
+
+        try self.buffer.appendSlice(std.mem.asBytes(&header));
+        try self.buffer.appendSlice(padding[0..]);
+    }
+
+    pub fn write_track_item_header(self: *ItdbWriter, track_item: itdb.TrackItem) !void {
+        const header = track_item.header;
+        const padding = track_item.padding;
+
+        try self.buffer.appendSlice(std.mem.asBytes(&header));
+        try self.buffer.appendSlice(padding[0..]);
+    }
+
+    pub fn write_playlist_header(self: *ItdbWriter, playlist: itdb.Playlist) !void {
+        const header = playlist.header;
+        const padding = playlist.padding;
+
+        try self.buffer.appendSlice(std.mem.asBytes(&header));
+        try self.buffer.appendSlice(padding[0..]);
+    }
+
+    pub fn write_playlist_item_header(self: *ItdbWriter, playlist_item: itdb.PlaylistItem) !void {
+        const header = playlist_item.header;
+        const padding = playlist_item.padding;
+
+        try self.buffer.appendSlice(std.mem.asBytes(&header));
+        try self.buffer.appendSlice(padding[0..]);
+    }
+
+    pub fn write_album_item_header(self: *ItdbWriter, album_item: itdb.AlbumItem) !void {
+        const header = album_item.header;
+        const padding = album_item.padding;
+
+        try self.buffer.appendSlice(std.mem.asBytes(&header));
+        try self.buffer.appendSlice(padding[0..]);
+    }
+
+    pub fn write_field_le(self: *ItdbWriter, comptime T: type) !void {
+        try self.buffer.appendSlice(&T);
     }
 };
